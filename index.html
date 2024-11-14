@@ -186,7 +186,6 @@
 
   <!-- end do section -->
 
-  <!-- who section -->
 
   <section class="who_section ">
     <div class="container">
@@ -216,7 +215,34 @@
     </div>
   </section>
 
-  <!-- end who section -->
+  <section class="who_section ">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-7">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>
+               SUMMARY
+              </h2>
+            </div>
+            <p>
+              We will be creating a multi-layered convolutional network to classify brain tumors in MRI scans that is trained via two different approaches: data parallelism and model pipelining parallelism. 
+              <br>Our development will focus on the goals of optimizing model accuracy and minimizing training runtime. 
+              <br>We will use OpenMP to implement data parallelism training, with gradient updates for different data batches computed separately and communicated across cores.
+              <br>We will use MPI to implement model pipelining parallelism, with various cores responsible for processing all data for a specific layer of our model.
+            </p>
+            
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="img-box">
+            <img src="images/brain_tumor.png" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
 
   <!-- work section -->
