@@ -187,12 +187,12 @@
   <!-- end do section -->
 
 
-  <section class="who_section ">
+  <section class="Summary">
     <div class="container">
       <div class="row">
         <div class="col-md-5">
           <div class="img-box">
-            <img src="images/brain_tumor.png" alt="">
+            <img src="images/brain_tumor.png" alt="" style="width: 100%; max-width: 400px; height: auto;">
           </div>
         </div>
         <div class="col-md-7">
@@ -215,28 +215,88 @@
     </div>
   </section>
 
-  <section class="who_section ">
+  <section class="Background">
     <div class="container">
       <div class="row">
         <div class="col-md-7">
           <div class="detail-box">
             <div class="heading_container">
               <h2>
-               SUMMARY
+                BACKGROUND
               </h2>
             </div>
             <p>
-              We will be creating a multi-layered convolutional network to classify brain tumors in MRI scans that is trained via two different approaches: data parallelism and model pipelining parallelism. 
-              <br>Our development will focus on the goals of optimizing model accuracy and minimizing training runtime. 
-              <br>We will use OpenMP to implement data parallelism training, with gradient updates for different data batches computed separately and communicated across cores.
-              <br>We will use MPI to implement model pipelining parallelism, with various cores responsible for processing all data for a specific layer of our model.
+              Our project of Brain Tumor detection from MRI scans is an image classification problem that will significantly benefit from the use of CNNs, which excel at recognizing patterns in visual data. 
+              <br>Training a CNN is computationally intensive, particularly for large datasets, due to the repeated calculations involved in gradient descent and backpropagation. Convolutional layers typically consume large portions of compute resources. Fully connected layers, responsible for high-dimensional transformations and final classification, hold most of the model’s parameters and require extensive memory. To address these issues we will be implementing two Convolutional Neural Network models to help us explore the performance and differences between MPI and OpenMP parallelization techniques.
+              <br>Gradient Descent is a key optimization technique used to train CNNs, which we will be focusing on as it is inherently time-consuming and resource-intensive due to its iterative nature. Parallelism will help with this as we can distribute its computations.
+              <br>When using data parallelism, we can split the dataset across multiple CPU cores allowing for simultaneous gradient computations and faster updates. When using model parallelism, we can divide the model up into multiple nodes, and allow each node to process gradients for a different layer simultaneously as batches of data are sent between layers. This allows for better memory management and helps with the scalability of having large datasets.
             </p>
             
           </div>
         </div>
         <div class="col-md-5">
           <div class="img-box">
-            <img src="images/brain_tumor.png" alt="">
+            <img src="images/cnn.png" style="width: 100%; max-width: 400px; height: auto;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="The Challenge">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-5">
+          <div class="img-box">
+            <img src="images/brian_tumor_img_2.png" style="width: 100%; max-width: 400px; height: auto;">
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>
+                THE CHALLENGE
+              </h2>
+            </div>
+            <p>
+              Our first implementation will be using data parallelism. We will use OpenMP to divide up the data across our CPU cores. Each core will independently process a portion of the data, and gradient updates will be synchronized across cores to train the model collectively.
+              <br>One key challenge with this approach is reducing the bottleneck of computing overall gradient updates across all data points. One common approach is to maintain a “parameter server”, which is responsible for receiving all gradient updates from other cores and accumulating them, but this is not scalable for larger datasets. We aim to use reductions across cores to accumulate updates and minimize bottlenecks.
+              <br>Another challenge is evenly distributing data across cores, as some images may take longer to process than others. We will experiment with dynamically assigning batches of data to various cores to make computation times more equitable.
+              <br>Our second implementation will use model pipelining parallelism. We will focus on splitting our architecture over multiple nodes, parallelizing the convolution and fully-connected layers by distributing the network’s parameters like weights and biases across nodes using MPI. Each node will handle a segment of the model, computing gradients for its portion of the weights and exchanging updates with other nodes.
+              <br>One challenge with pipelining is the high communication overhead between processes, as we will have to send over the processed results of our entire dataset between layers of the model. We plan to limit this by using asynchronous sends to reduce idle time between cores, as well as intensive batching of data so only a limited amount of data is sent at once.
+              <br>A second challenge is some layers of the model taking longer time to train, which could result in some cores for faster layers idling. Similar to our first implementation, we will use intensive batching so that layers dependent on slow nodes can start their computations in parallel and minimize idling.
+            </p>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="Resources">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-5">
+          <div class="img-box">
+            <img src="images/research_paper_img.png" style="width: 100%; max-width: 400px; height: auto;">
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>
+                RESOURCES
+              </h2>
+            </div>
+            <p>
+              <strong>Computing Resources:</strong> Access to multi-core CPU systems that support OpenMP and MPI (through CMU GHC and PSC machines).
+              <br><br>
+              <strong>Starter Code:</strong> We will implement the CNN and training pipeline from scratch without using high-level libraries (e.g., PyTorch, TensorFlow), ensuring full control over parallelization. We use notes from previous machine learning courses to guide our implementation as well as open-source libraries like OpenCV to process our image data.
+              <br><br>
+              <strong>Reference Material:</strong> We have been provided with and will use the paper <a href="https://arxiv.org/abs/1412.1189" target="_blank" style="text-decoration: underline;">“One weird trick for parallelizing convolutional neural networks” by Alex Krizhevsky</a>. This paper specifies work on multi-GPU CNN training, particularly the balance between data and model parallelism.
+              <br><br>
+              <strong>Other Resources Needed:</strong> We are actively considering various brain tumor datasets.
+            </p>
           </div>
         </div>
       </div>
@@ -244,7 +304,72 @@
   </section>
 
 
-
+  <section class="Goals-and-Deliverables">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>
+                GOALS AND DELIVERABLES
+              </h2>
+            </div>
+  
+            <!-- Planned Goals Section -->
+            <div class="planned-goals">
+              <h3><strong>Planned Goals</strong></h3>
+              <ul>
+                <li>
+                  <strong>Implement a CNN model with OpenMP-based data parallelism for convolutional and fully-connected layers</strong>
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Objective:</strong></span> The goal is to enable efficient processing of mini-batches across multiple CPU cores using OpenMP. This will involve parallelizing both the convolutional operations and the fully-connected layers of the CNN model. By utilizing OpenMP, we aim to distribute the workload of each layer across available cores, reducing the computation time for each mini-batch.
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Justification:</strong></span> OpenMP provides an easy-to-use, shared-memory parallelism model that will allow us to optimize performance without extensive modifications to the original codebase. We expect to see a significant reduction in training time for a single machine, especially when processing large mini-batches, which is critical for scaling up CNN training.
+                </li>
+                <li>
+                  <strong>Implement a CNN model with MPI-based model pipelining parallelism for convolutional and fully-connected layers</strong>
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Objective:</strong></span> This goal involves leveraging MPI (Message Passing Interface) for model parallelism to distribute the convolutional and fully-connected layers' computations across multiple nodes. We will implement a system where the CNN model's weights are partitioned across multiple nodes, and gradient synchronization is performed efficiently during backpropagation.
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Justification:</strong></span> By introducing MPI-based parallelism, we aim to scale the CNN model to work across a distributed system, which will allow the processing of larger models that do not fit into the memory of a single node. This will also allow the network to process larger datasets, improving both scalability and model performance. We expect to achieve a performance improvement in terms of parallel scalability when comparing this to a single-node, single-threaded approach.
+                </li>
+                <li>
+                  <strong>Achieve noticeable speedup in training time compared to a sequential implementation, while maintaining classification accuracy</strong>
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Objective:</strong></span> After implementing both data parallelism (OpenMP) and model parallelism (MPI), we aim to demonstrate a significant speedup in training time when compared to the sequential implementation of the CNN model. Importantly, we will ensure that the classification accuracy of the model remains consistent, despite the introduction of parallelism.
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Justification:</strong></span> Optimizing for parallelism should not come at the cost of accuracy. By focusing on both speedup and accuracy, we will ensure that the model's performance improves not only in terms of efficiency but also in its ability to generalize to new data.
+                </li>
+              </ul>
+            </div>
+  
+            <!-- Stretch Goals Section with Horizontal Scroll -->
+            <div class="stretch-goals" style="overflow-x: auto; white-space: nowrap;">
+              <h3><strong>Stretch Goals</strong></h3>
+              <div class="stretch-goals-list" style="display: inline-block; width: max-content;">
+                <div class="goal">
+                  <strong>Emulate the paper by Alex Krizhevsky, creating a model that utilizes both data and model parallelism correctly and efficiently</strong>
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Objective:</strong></span> This stretch goal involves emulating the architecture described in Alex Krizhevsky’s seminal paper on CNNs, where both data and model parallelism are used in tandem to enhance performance. We will implement a hybrid approach that utilizes OpenMP for data parallelism and MPI for model parallelism, combining both methods to optimize computational efficiency and memory management.
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Justification:</strong></span> Combining data and model parallelism is a highly challenging task, but if successful, it could lead to substantial improvements in performance, allowing us to scale the CNN model efficiently across multiple machines and CPUs. This would also serve as a validation of the theoretical approach presented in the paper, providing a benchmark for real-world implementations of CNNs at scale.
+                </div>
+                <div class="goal">
+                  <strong>Normalize our data to accommodate MRIs in different format than initial dataset and try to achieve similar accuracy results</strong>
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Objective:</strong></span> As a part of improving the model's generalization capabilities, we plan to extend the dataset by incorporating additional data points from external sources. This data augmentation strategy will help to improve the model's robustness and ability to generalize to new, unseen data.
+                  <br>
+                  <span style="text-decoration: underline;"><strong>Justification:</strong></span> By adding new data points, we can assess whether increasing the dataset size leads to a noticeable improvement in classification accuracy, as well as whether the parallelized CNN model can handle this expanded dataset without a loss in performance. This step will also provide valuable insights into the model's scalability with respect to data size.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+s  
+  
   <!-- work section -->
   <section class="work_section layout_padding">
     <div class="container">
