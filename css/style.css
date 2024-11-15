@@ -324,6 +324,13 @@ a:focus {
   margin-bottom: 70px;
 }
 
+.infocontainer .img-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Ensures vertical centering within the column */
+}
+
 .who_section .row {
   -webkit-box-align: center;
       -ms-flex-align: center;
