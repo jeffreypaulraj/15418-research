@@ -359,10 +359,11 @@
         <div class="item">
           <h3>Week 2 (11/18 - 11/24)</h3>
           <ul>
+            <li>Finish implementing all model layers, create training loop</li>
             <li>Adapt model layers for a specific dataset</li>
             <li>Process image data using OpenCV</li>
-            <li>Implement data parallelism with OpenMP in the convolution layers distributing mini-batches access to our CPU cores</li>
-            <li>Test/debug Parallelized forward/back passes on small test samples using OpenMP to verify the correctness of data parallelism</li>
+            <li>Start implementing data parallelism with OpenMP in the convolution layers distributing
+              mini-batches access to our CPU cores</li>
           </ul>
         </div>
 
@@ -370,9 +371,7 @@
         <div class="item">
           <h3>Week 3 (11/25 - 12/1)</h3>
           <ul>
-            <li>Milestone due date 11/27</li>
-            <li>Complete milestone report on preliminary findings in data parallelism approach</li>
-            <li>Start work on implementing model pipelining parallelism, using MPI to pass data between various layers of model</li>
+            <li>Work on implementation of model with data parallelism</li>
           </ul>
         </div>
 
@@ -380,9 +379,9 @@
         <div class="item">
           <h3>Week 4 (12/2 - 12/8)</h3>
           <ul>
-            <li>Complete Model Parallelism approach</li>
-            <li>Fine-tune hyperparameters for both approaches, optimize for prediction accuracy</li>
-            <li>Measure training runtime for both approaches under various parameters (batch sizes, activations, etc)</li>
+            <li>Test/debug Parallelized forward/back passes on small test samples using OpenMP to verify the correctness of data parallelism</li>
+            <li>Complete milestone report on preliminary findings in data parallelism approach</li>
+            <li>Start work on implementing model pipelining parallelism, using MPI to pass data between various layers of model</li>
           </ul>
         </div>
 
@@ -390,8 +389,11 @@
         <div class="item">
           <h3>Week 5 (12/9-12/13) - Project Poster Session</h3>
           <ul>
+            <li>Complete Model Parallelism approach</li>
+            <li>Fine-tune hyperparameters for both approaches, optimize for prediction accuracy</li>
+            <li>Measure training runtime for both approaches under various parameters (batch sizes, activations, etc.)</li>
             <li>Write final report</li>
-            <li>Create research poster to convey findings</li>
+            <li> Create research poster to convey findings</li>
           </ul>
         </div>
       </div>
@@ -399,6 +401,68 @@
   </section>
   
   
+  <!-- Milestone Report Section -->
+  <section class="Milestone Report" id="milestone-report">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>
+                MILESTONE REPORT
+              </h2>
+            </div>
+
+            <!-- Progress Subsection -->
+            <div class="subsection" id="progress">
+              <h3>Progress</h3>
+              <p>
+                Over the past few weeks, we have made significant progress in creating the model layers for our CNN,
+                including the convolution layer, linear layer, activation layer, max-pooling layer, and loss-computing
+                layer. We have also made our model configurable to use multiple convolution layers, based on time
+                and accuracy metrics. However, since we are creating all of these model layers from scratch, this
+                development took longer than expected, and consumed much of week 2.
+                <br><br>
+                This led us to delay the development of our first parallelism approach: data parallelism.
+                However, development of this model has begun and we are currently in the debugging/testing stage.
+                We have revised our schedule as reflected below. We plan on completing our data parallelism model
+                and starting the pipelining parallelism model in Week 4, then concluding all development and our
+                final paper in Week 5.
+                <br><br>
+                However, we are very confident we will have all of our deliverables completed by Week 5.
+                We have noticed during our development that there are many reusable components across models,
+                which will allow for much faster development for the pipelining model.
+              </p>
+            </div>
+
+            <!-- Final Deliverables Subsection -->
+            <div class="subsection" id="final-deliverables">
+              <h3>Final Deliverables</h3>
+              <p>
+                In our final presentation, we aim to show an overview of our two models (data parallelism and
+                pipelining parallelism), and show multiple graphs to compare their classification accuracy and
+                training time against the baseline sequential model across multiple epochs of training. We also plan
+                on tuning various hyperparameters, such as batch size and learning rate, and presenting graphs on our
+                findings of the effects of this tuning.
+              </p>
+            </div>
+
+            <!-- Concerns Subsection -->
+            <div class="subsection" id="concerns">
+              <h3>Concerns</h3>
+              <p>
+                We do not have any significant concerns at this time, as we have already planned how we will be
+                implementing our second model, including our parallelism approach and a division of work among
+                ourselves. Since we will be reusing components from our first model, we anticipate developing our
+                second model will be much faster.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
 
 
