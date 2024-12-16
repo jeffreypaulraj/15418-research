@@ -680,9 +680,11 @@
           <div class="subsection" id="justification">
             <h3>Machine Target Justification</h3>
             <p>
-              We believe model parallelism would have performed better on the GPU due to its ability to efficiently manage 
-              large-scale parallel computations, leveraging high throughput and memory bandwidth to handle the distributed model 
-              stages effectively.
+              We believe data parallelism would have performed better on the GPU due to its ability to efficiently manage
+              large-scale parallel computations, especially those as these gradient calculations are independent across
+              batches and are computationally intensive. For model pipelining parallelism, CPUs are better suited, since
+              there is high communication between different processes as well as a sequential dependency between the
+              layers represented by each process.
             </p>
           </div>
 
@@ -713,6 +715,11 @@
             <p>
               <a href="https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset/data" class="ref-link">
                 Brain Tumor MRI dataset
+              </a>
+            </p>
+            <p>
+              <a href="https://deeplearning-cmu-10417.github.io/syllabus.html" class="ref-link">
+                10-417 Machine Learning Notes
               </a>
             </p>
           </div>
