@@ -607,7 +607,7 @@
             <img src="images/1d_time 5.02.16 PM.png"  width="500" height="400"/>
             <img src="images/2d_time 5.02.16 PM.png" width="500" height="400" />  
             <p>
-              We can also notice in Figures 3 and 4 above that speed of the Data Parallelism models using a smaller
+              We can also notice in graphs above that speed of the Data Parallelism models using a smaller
               batch size of 128 is slightly faster than that of models using a batch size of 256. This is because with
               a larger batch size there is more computations per process. This means these additional computations
               are more time-intensive than the additional communication overhead associated with a smaller batch
@@ -637,8 +637,8 @@
               reducing overall efficiency.
             </p>
             <p>
-              To address this, future optimizations could include reducing synchronization frequency, in-
-              creasing the work per thread (such as processing larger batches of data per thread), or exploring
+              To address this, future optimizations could include reducing synchronization frequency,
+              increasing the work per thread (such as processing larger batches of data per thread), or exploring
               asynchronous updates to allow threads to continue working without waiting for others. These
               optimizations would help reduce idle times and improve the utilization of available parallel resources,
               which could ultimately lead to better performance.
