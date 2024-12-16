@@ -481,10 +481,10 @@
             </div>
   
             <!-- Implementation Section -->
-            <div class = "subsection" id="implementation">
+            <div class="subsection" id="implementation">
               <h3>Implementation</h3>
               <p>
-                Our implementation focuses on creating five different Convolutional Neural Networks (CNN) and corresponding training loops using three parallelism strategies: sequential execution (no parallelism), data parallelism, and model pipelining parallelism. For the latter two strategies, we create two different models each: a 1D CNN with six layers, and a 2D CNN with nine layers. Each approach has been designed to use multi-core CPUs while addressing synchronization and workload distribution challenges.
+                Our implementation focuses on creating five different Convolutional Neural Networks (CNN) and corresponding training loops using three parallelism strategies: sequential execution (no parallelism), data parallelism, and model pipelining parallelism. For the latter two strategies, we create two different models each: a 1D CNN with six layers, and a 2D CNN with nine layers. Each approach has been designed to use multi-core CPUs, while addressing synchronization and workload distribution challenges.
               </p>
               <p>
                 Our baseline approach, which was the sequential execution, runs the entire model on a single process without parallelization. It serves as a reference for performance comparisons.
@@ -492,21 +492,22 @@
             </div>
   
             <!-- Technologies Utilized Section -->
-            <div class= "subsection", id = "technologies-utilized">
-              <h3> Technologies Utilized</h3>
-
+            <div class="subsection" id="technologies-utilized">
+              <h3>Technologies Utilized</h3>
               <p>
                 Our initial implementation utilized C++; however, due to some library constraints and development flexibility, we switched over to Python to write all our convolutional neural network (CNN) functions. We purposely avoided using Python libraries that would simplify the creation of this neural network, such as PyTorch or TensorFlow, and instead wrote our own implementations of the core PyTorch-like APIs. This decision allowed us to have full control over the implementation details of both the model itself and the corresponding training loop while gaining a deeper understanding of the underlying operations involved in a neural network.
               </p>
               <p>
-                The primary libraries we used were NumPy, which provided efficient array operations and mathematical computations, and Python's multiprocessing library for managing processes on multiple cores, synchronization primitives (such as locks and thread-safe queues), and shared memory. We specifically targeted a multi-core CPU for process-based parallelism, as it allowed us to take advantage of multiple cores to distribute the workload of convolution operations and other key computations.
+                The primary libraries we used were NumPy, which provided efficient array operations and mathematical computations, and Python's multiprocessing library for managing processes on multiple cores, synchronization primitives (such as locks and thread-safe queues), and shared memory.
+              </p>
+              <p>
+                We specifically targeted a multi-core CPU for process-based parallelism, as it allowed us to take advantage of multiple cores to distribute the workload of convolution operations and other key computations. By dividing the input data and kernel operations across multiple processes, we achieved significant parallel speedups while ensuring that communication overhead between processes was minimized. The use of shared memory enables efficient data exchange between processes, which is particularly important for reducing redundant memory copies and ensuring coherence. Additionally, we carefully employed locks and synchronization mechanisms such as thread-safe queues to manage access to shared resources and maintain correctness during concurrent execution. Our approach allowed us to maximize CPU utilization while maintaining a clean and scalable architecture for our neural network implementation.
               </p>
             </div>
   
             <!-- Problem Mapping to Parallel Machines Section -->
-            <div class= "subsection", id = "problem-mapping">
+            <div class="subsection" id="problem-mapping">
               <h3>Problem Mapping to Parallel Machines</h3>
-             
               <p>
                 For Data Parallelism, each worker (process) has its own copy of the model in local memory, as well as access to a shared model in the parameter server, and works on a different subset of the data. Synchronization is achieved using locks to ensure each worker can calculate weight updates with its given input batch to the shared model without overwriting effects from other batches. This shared model then propagates these new weights to each worker's local model at the start of each epoch. We wait for all processes to finish before moving to the next epoch. This approach maximizes compute usage but requires efficient synchronization for gradient exchange.
               </p>
@@ -515,36 +516,42 @@
               </p>
             </div>
   
-            <!-- Changes to the Original Serial Algorithm Section -->
-            <div class="subsection", id = "changes-to-algorithm">
+            <!-- Changes to Original Serial Algorithm Section -->
+            <div class="subsection" id="changes-to-original">
               <h3>Changes to the Original Serial Algorithm</h3>
               <p>
-                We made significant changes to our original sequential algorithm to better map onto a parallel machine. In the sequential implementation, all operations such as convolution, activation, pooling, flattening, and fully connected linear layers are executed one after the other for each batch of input data. This approach is inherently limited by the sequential nature of the computation, which underutilizes parallel hardware resources. To address this, two types of parallelism were introduced: data parallelism and model (pipeline) parallelism.
+                We made significant changes to our original sequential algorithm to better map onto a parallel machine. In the sequential implementation, all operations such as convolution, activation, pooling, flattening, and fully connected linear layers are executed one after the other for each batch of input data. This approach is inherently limited by the sequential nature of the computation, which underutilized parallel hardware resources. To address this, two types of parallelism were introduced: data parallelism and model (pipeline) parallelism.
               </p>
               <p>
-                For data parallelism, the same operation is applied concurrently on multiple processes for different data batches. To implement this, we had to rewrite our training loop to spawn multiple processes on each epoch, and create a new initial model on each process in their private memory spaces. We also initialized the parameter server in a shared memory region, with a concurrency lock to ensure correctness of gradient updates. We also had to create new methods to override weights on a model.
+                For data parallelism, the same operation is applied concurrently on multiple processes for different data batches. To implement this, we had to rewrite our training loop to spawn multiple processes on each epoch and create a new initial model on each process in their private memory spaces. We also initialized the parameter server in a shared memory region, with a concurrency lock to ensure correctness of gradient updates. We also had to create new methods to override weights on a model.
               </p>
               <p>
-                For pipeline parallelism, we rewrote the entire model architecture as well as the training loop. Rather than computing forward/backward passes for all layers in one function, we spawned two new processes for each layer, for its forward and backward passes respectively. We also created one thread-safe queue for each process spawned. We add the input image data for each batch into the queue for the forward pass of the first layer in our model, which will perform the forward operation then pass the output into the queue for the second layer. Once all forward passes for the batch are complete, the loss layer will send its total loss to the backward pass of the last layer, which updates its weights by calculating gradients and passing these gradients to the previous layer's backward pass.
+                For pipeline parallelism, we rewrote the entire model architecture as well as the training loop. Rather than computing forward/backward passes for all layers in one function, we spawned two new processes for each layer, for its forward and backward passes, respectively. We also created one thread-safe queue for each process spawned. We add the input image data for each batch into the queue for the forward pass of the first layer in our model, which will perform the forward operation, and then pass the output into the queue for the second layer.
               </p>
               <p>
-                Data flows through the pipeline in batches, enabling concurrent computation across multiple stages. These changes effectively reduce idle time, improve resource utilization, and take advantage of the parallel processing capabilities of modern hardware, leading to better scalability and faster execution compared to the original sequential version.
+                Once all forward passes for the batch are complete, the loss layer will send its total loss to the queue for the backward pass of the last layer, which updates its weights by calculating gradients and passing these gradients to the previous layer's backward pass. We also had to create a shared memory region to store the model itself. Data flows through the pipeline in batches, enabling concurrent computation across multiple stages. These changes effectively reduce idle time, improve resource utilization, and take advantage of the parallel processing capabilities of modern hardware, leading to better scalability and faster execution compared to the original sequential version.
               </p>
             </div>
   
-            <!-- Original Code Section -->
-            <div class="subsection", id ="original-code">
-              <h3>Original code</h3>
+            <!-- Project Iterations Section -->
+            <div class="subsection" id="project-iterations">
+              <h3>Project Iterations</h3>
               <p>
-                We used a basic reference for the individual layers for our sequential models from previous ML courses we took; however, all the layers we implemented for both Data and Model parallelism approaches were made on our own, as well as all the modules and helper functions created from scratch.
+                Given our reference from our previous machine learning courses, we initially tried to build our CNN models from scratch in C++. We ran into many difficulties in developing this, as many Python NumPy operations assumed in our course did not have a direct equivalent in C++. Ultimately, we decided to rewrite all of our models in Python, but this also led to some difficulties.
+              </p>
+              <p>
+                For one, in some layers of our sequential model, we saved some class variables in our forward pass which would be referenced in our backward pass. This did not have any negative consequences for a sequential implementation, but for a data parallel approach, a second batch could perform a forwards pass before the first batch did its backward pass, overwriting these class variables and failing correctness. To avoid putting locks on each pass of data, we overhauled all of these layers to return a tuple of these previous class variables, then to receive this tuple in the backwards pass to perform gradient descent.
+              </p>
+              <p>
+                When this didn't give us our expected speedup, we went a step further and created a new model instance in each process' private memory space to prevent any bottlenecks. Python's multiprocessing library has in-built functions to automatically sync variables across processes, but we found this to be too slow. Therefore, we wrote this functionality from scratch, so each process could push its updates to a parameter server then manually request the updated weights, which was much faster.
               </p>
             </div>
-  
           </div>
         </div>
       </div>
     </div>
   </section>
+  
   
 
 
@@ -567,7 +574,7 @@
 
           <!-- Performance Speedup -->
           <div class="subsection" id="performance-speedup">
-            <h3>Performance Speedup</h3>
+            <h3>Speedup, Loss, Accuracy Metrics</h3>
             <p>
               We defined our performance in terms of the speedup of the Data and Model Parallelism approaches compared to
               our benchmark sequential approach, measured in seconds. The dataset consisted of around 4000 images, and we trained
@@ -577,43 +584,29 @@
             <!-- Insert Image for Speedup Analysis -->
             <img src="images/table.png" alt="Speedup and Accuracy Comparison" width="1100" height="500"/>
             <p>
-              As seen in the table above, the speed of Data Parallelism was significantly better than Model Parallelism when compared
-              to our benchmark sequential approach. We believe this is due to increased communication overheads and idle time from
-              computation delays in different layers. Data Parallelism excelled in efficiency, achieving faster training times due to its
-              ability to dynamically allocate computational resources based on individual batch processing times, minimizing idle time
-              and balancing the workload across processors.
+              As seen in Figures 1 and 2 above, the speedup of Data parallelism was much faster than that of
+              Model Parallelism compared to our benchmark sequential approach. We believe this may be due to
+              increased communication overheads and idling time from computation delays in different layers in
+              our pipelining model. Data parallelism excelled in efficiency, achieving the fastest training times.
+              This outcome stems from its ability to dynamically allocate computational resources based on
+              individual batch processing times, minimizing idle time and balancing the workload across processors.
+              We can also see from the figures above that both the pipeline and data parallelism models
+              achieved slightly lower accuracy than sequential. Since the sequence of gradient updates is more
+              randomized, the magnitude of gradient momentum decreases, resulting in smaller gradient updates
+              per epoch and lower overall accuracy. We notice a substantial difference in the accuracy comparisons
+              of the 1D vs. 2D convolutions. We reason this may be because there were more layers in the 2D
+              neural network, there are more weights being updated which seemed to be overfitting on the training
+              data and lowering accuracy on the test dataset
             </p>
-          </div>
-
-          <!-- Accuracy Comparison -->
-          <div class="subsection" id="accuracy-comparison">
-            <h3>Accuracy Comparison</h3>
-            <p>
-              As seen in the tables, both the pipeline and data parallelism models achieved slightly lower accuracy than the sequential
-              model. Since the sequence of gradient updates is more randomized, the magnitude of gradient momentum decreases, resulting
-              in smaller gradient updates per epoch and lower overall accuracy. We also observed a substantial difference in the accuracy
-              comparisons between the 1D and 2D convolutions. As the number of layers in the neural network increased, overfitting of the
-              data seemed to occur.
-            </p>
-          </div>
-
-          <!-- Batch Size Impact -->
-          <div class="subsection" id="batch-size-impact">
-            <h3>Impact of Batch Size</h3>
-            <!-- Insert Image for Batch Size Impact -->
             <img src="images/1d_time 5.02.16 PM.png"  width="500" height="400"/>
-            <img src="images/2d_time 5.02.16 PM.png" width="500" height="400" />
+            <img src="images/2d_time 5.02.16 PM.png" width="500" height="400" />  
             <p>
-              We noticed that the performance of the Data Parallelism model using a smaller batch size was much slower compared to using
-              a batch size of 256. With a larger batch size, there is less overhead per batch. This includes the time spent on loading
-              data, setting up computations, and managing synchronization across threads or processing units. Larger batch sizes help
-              amortize these overheads, reducing the relative time spent on setup and communication.
-            </p>
-          </div>
-
-          <!-- Loss Metrics Analysis -->
-          <div class="subsection" id="loss-metrics">
-            <h3>Loss Metrics</h3>
+              We can also notice in Figures 3 and 4 above that speed of the Data Parallelism models using a smaller
+              batch size of 128 is slightly faster than that of models using a batch size of 256. This is because with
+              a larger batch size there is more computations per process. This means these additional computations
+              are more time-intensive than the additional communication overhead associated with a smaller batch
+              size with more processes.
+            </p>        
             <img src="images/1d_loss 5.02.16 PM.png" width="500" height="400" />
             <img src="images/2d_loss 5.02.16 PM.png" width="500" height="400" />
             <p>
@@ -626,32 +619,64 @@
           <!-- Analysis of Speedup Limitations -->
           <div class="subsection" id="speedup-limitations">
             <h3>Analysis of Speedup Limitations</h3>
-            <img src="images/idle_time_comparison.png" width="600" height="600" />
-
             <p>
-              The primary factor limiting speedup in our implementation was synchronization overhead and the resulting idle times in
-              the threads. As the batch size increased, the time spent on updating weights grew longer, causing each thread to hold onto
-              resources (such as locks or shared variables) for a longer duration. This caused idle times for other threads, as they
-              waited for the thread with the longest update time to finish. Consequently, the parallelism was not fully utilized, and
-              the expected speedup was not achieved.
+              The primary factor limiting the speedup in our implementation was synchronization overhead and the
+              resulting idle times in the threads. As the batch size increased, the time spent on updating weights
+              grew longer, causing each thread to hold onto resources (such as locks or shared variables) for a
+              greater duration. This led to idle times for the other threads as they waited for the thread with the
+              longest update time to finish. Consequently, the parallelism was not fully utilized, and the expected
+              speedup was not achieved. Although the system theoretically supported parallelism, the need for
+              synchronization in the weight update step introduced a bottleneck, especially with larger models or
+              weights. This limited the scalability of the parallelism and led to significant idle time in the threads,
+              reducing overall efficiency.
             </p>
             <p>
-              Although the system theoretically supported parallelism, the need for synchronization in the weight update step
-              introduced a bottleneck, especially with larger models or weights. This limited the scalability of the parallelism and
-              caused significant idle time in the threads, reducing overall efficiency. Future optimizations could include reducing
-              synchronization frequency, increasing the work per thread (e.g., processing larger batches of data per thread), or exploring
-              asynchronous updates to allow threads to continue working without waiting for others. These optimizations could reduce idle
-              times and improve the utilization of available parallel resources, ultimately improving performance.
+              To address this, future optimizations could include reducing synchronization frequency, in-
+              creasing the work per thread (such as processing larger batches of data per thread), or exploring
+              asynchronous updates to allow threads to continue working without waiting for others. These
+              optimizations would help reduce idle times and improve the utilization of available parallel resources,
+              which could ultimately lead to better performance.
             </p>
           </div>
 
-          <!-- GPU Performance Analysis -->
-          <div class="subsection" id="gpu-performance">
-            <h3>GPU Performance Considerations</h3>
+          <div class="subsection" id="deeper-analysis">
+            <h3>Deeper Analysis of Execution Time</h3>
+            <img src="images/idle_time_comparison.png" width="1100" height="800" /> 
             <p>
-              We believe that model parallelism would have performed better on the GPU due to its ability to efficiently manage
-              large-scale parallel computations. GPUs leverage high throughput and memory bandwidth to handle distributed model stages
-              more effectively, potentially offering better scalability and performance for our model parallelism approach.
+              All time not spent on computation in the total runtime of our parallel models is spent idling. There
+              are various sources of idling in both data and model pipelining parallelism, such as time spent
+              acquiring locks to perform model updates (data parallelism) and time spent waiting to receive data
+              from a previous model layer’s process (pipelining parallelism). We measured the total time spent
+              idling per epoch for all four of our parallel models.
+            </p>
+            <p>
+              It is expected that 2D Model Parallelism has about 60% more idling time than the 1D
+              Model Parallelism, as these two models have 18 and 12 processes spawned respectively. More
+              processes means more total time spent waiting for a single process’s computations. We could
+              improve on this by creating a hybrid model incorporating both pipelining and data parallelism, so we
+              assign different data batches to different pipelines and aggregate the results at the end of each epoch.
+            </p>
+            <p>
+              In terms of the Data Parallelism idling times, we see that the total idling time increases lin-
+              early with the number of epochs for both 1D and 2D models. This is because as the weights increase
+              in magnitude, it takes more time to calculate weight updates using computationally expensive matrix
+              multiplications. This means each process holds the weight update lock for longer during later epochs,
+              which increases the total idling time. This was not an issue with model pipelining parallelism, as
+              each layer’s weights are independent so updates were done concurrently. To remedy this, next steps
+              could be to implement separate locks on individual layers’ weight updates, as opposed to one lock on
+              the entirety of all weights across all layers.
+            </p>
+
+          </div>
+
+
+          <!-- GPU Performance Analysis -->
+          <div class="subsection" id="justification">
+            <h3>Machine Target Justification</h3>
+            <p>
+              We believe model parallelism would have performed better on the GPU due to its ability to efficiently manage 
+              large-scale parallel computations, leveraging high throughput and memory bandwidth to handle the distributed model 
+              stages effectively.
             </p>
           </div>
 
@@ -662,6 +687,34 @@
 </section>
 
 
+
+<section class="infocontainer" id="references">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="detail-box">
+          <div class="heading_container">
+            <h2>
+              REFERENCES
+            </h2>
+          </div>
+          <div class="reference-links">
+            <p>
+              <a href="https://arxiv.org/pdf/1404.5997" class="ref-link">
+                One weird trick for parallelizing convolutional neural networks
+              </a>
+            </p>
+            <p>
+              <a href="https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset/data" class="ref-link">
+                Brain Tumor MRI dataset
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
   <!-- info section -->
